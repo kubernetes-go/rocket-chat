@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: rocket-chat-ingress
+  annotations:
+    nginx.org/websocket-services: "rocket-chat-server"
+spec:
+  # tls:
+  # - hosts:
+  #   - cafe.example.com
+  #   secretName: default-server-secret
+  rules:
+  - host: rocket-chat.myhost.io
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: rocket-chat-server
+          servicePort: 3000

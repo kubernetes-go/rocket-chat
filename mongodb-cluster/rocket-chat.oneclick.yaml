@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rocket-chat-server-config
+  namespace: default
+data:
+  mongoUrl: "mongodb://mongodb-service-master,mongodb-service-replica-1,mongodb-service-replica-2:27017/rocketchat?replicaSet=rs0"
+  rootUrl: "http://rocket-chat.myhost.io"
+  accountsUseDNSDomainCheck: "false"
+  adminUsername: "admin"
+  adminPass: "supersecret"
+  adminEmail: "admin@myhost.io"
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rocket-chat-server
+spec:
+  selector:
+    matchLabels:
+      app: rocket-chat-server
+  template:
+    metadata:
+      labels:
+        app: rocket-chat-server
+    spec:
+      containers:
+      - name: rocket-chat-server
+        image: rocketchat/rocket.chat:latest
+        ports:
+        - containerPort: 3000
+        env:
+          - name: MONGO_URL
+            valueFrom:
+              configMapKeyRef:
+                name: rocket-chat-server-config
+                key: mongoUrl
+          - name: ROOT_URL
+            valueFrom:
+              configMapKeyRef:
+                name: rocket-chat-server-config
+                key: rootUrl
+          - name: Accounts_UseDNSDomainCheck
+            valueFrom:
+              configMapKeyRef:
+                name: rocket-chat-server-config
+                key: accountsUseDNSDomainCheck
+          - name: ADMIN_USERNAME
+            valueFrom:
+              configMapKeyRef:
+                name: rocket-chat-server-config
+                key: adminUsername
+          - name: ADMIN_PASS
+            valueFrom:
+              configMapKeyRef:
+                name: rocket-chat-server-config
+                key: adminPass
+          - name: ADMIN_EMAIL
+            valueFrom:
+              configMapKeyRef:
+                name: rocket-chat-server-config
+                key: adminEmail
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: rocket-chat-server
+  labels:
+    name: rocket-chat-server
+spec:
+  selector:
+    app: rocket-chat-server
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+  type: NodePort
